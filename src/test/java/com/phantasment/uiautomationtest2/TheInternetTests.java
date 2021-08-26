@@ -12,6 +12,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Action;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -116,8 +118,63 @@ public class TheInternetTests
         gotoMainPage();
         mainPage.gotoPage("drag_and_drop");
         WebElement a = webDriver.findElement(By.id("column-a"));
+        new WebDriverWait(webDriver, 2L).until(ExpectedConditions.elementToBeClickable(a));
         WebElement b = webDriver.findElement(By.id("column-b"));
-        new Actions(webDriver).dragAndDrop(a, b).build().perform();
+        Actions action = new Actions(webDriver);
+        action.clickAndHold(a).moveToElement(b).release().build().perform();
+    }
+
+    @Test
+    public void dropdownTest()
+    {
+        gotoMainPage();
+        mainPage.gotoPage("dropdown");
+        WebElement dropdown = webDriver.findElement(By.id("dropdown"));
+        List<WebElement> options = dropdown.findElements(By.cssSelector("option:not([disabled='disabled'])"));
+
+        for (int i = 0; i < options.size(); ++i)
+        {
+            WebElement option = options.get(i);
+            dropdown.click();
+            option.click();
+            Assertions.assertEquals(option.getText(), "Option " + (i + 1));
+        }
+    }
+
+    @Test
+    public void dynamicContentTest()
+    {
+        gotoMainPage();
+        mainPage.gotoPage("dynamic_content");
+        List<WebElement> rows = webDriver.findElement(By.id("content")).findElements(By.className("row"));
+
+        for (WebElement row : rows)
+        {
+            WebElement image = row.findElement(By.className("large-2")).findElement(By.tagName("img"));
+
+            try
+            {
+                Assertions.assertTrue(ImageChecker.isValidImage(image.getAttribute("src")));
+            }
+            catch (Throwable t)
+            {
+                Assertions.fail(t);
+            }
+
+            WebElement text = row.findElement(By.className("large-10"));
+            Assertions.assertTrue(text.getText().length() > 0);
+        }
+    }
+
+    @Test
+    public void entryAdTest()
+    {
+        gotoMainPage();
+        mainPage.gotoPage("entry_ad");
+        WebElement modalFooter = webDriver.findElement(By.className("modal-footer"));
+        new WebDriverWait(webDriver, 5L).until(ExpectedConditions.elementToBeClickable(modalFooter));
+        modalFooter.findElement(By.tagName("p")).click();
+        Assertions.assertEquals("Displays an ad on page load.", webDriver.findElement(By.className("example")).findElement(By.tagName("p")).getText());
     }
 
     @AfterEach
