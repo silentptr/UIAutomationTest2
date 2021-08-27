@@ -2,6 +2,7 @@ package com.phantasment.uiautomationtest2;
 
 import com.phantasment.uiautomationtest2.ui.MainPage;
 import com.phantasment.uiautomationtest2.util.ImageChecker;
+import com.phantasment.uiautomationtest2.util.NumberChecker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -175,6 +176,101 @@ public class TheInternetTests
         new WebDriverWait(webDriver, 5L).until(ExpectedConditions.elementToBeClickable(modalFooter));
         modalFooter.findElement(By.tagName("p")).click();
         Assertions.assertEquals("Displays an ad on page load.", webDriver.findElement(By.className("example")).findElement(By.tagName("p")).getText());
+    }
+
+    @Test
+    public void forgotPasswordTest()
+    {
+        gotoMainPage();
+        mainPage.gotoPage("forgot_password");
+        WebElement emailField = webDriver.findElement(By.cssSelector("input[type='text']"));
+        emailField.sendKeys("testemail@email.com");
+        WebElement submit = webDriver.findElement(By.id("form_submit"));
+        submit.click();
+        new WebDriverWait(webDriver, 10L).until(ExpectedConditions.elementToBeClickable(By.tagName("body")));
+        Assertions.assertEquals("Internal Server Error", webDriver.findElement(By.tagName("h1")).getText());
+    }
+
+    @Test
+    public void loginTest()
+    {
+        gotoMainPage();
+        mainPage.gotoPage("login");
+        WebElement usernameField = webDriver.findElement(By.id("username"));
+        WebElement passwordField = webDriver.findElement(By.id("password"));
+        WebElement submit = webDriver.findElement(By.cssSelector("button[type='submit']"));
+
+        usernameField.sendKeys("wrongusername");
+        passwordField.sendKeys("wrongpassword");
+        submit.click();
+        WebElement flashError = webDriver.findElement(By.id("flash"));
+        new WebDriverWait(webDriver, 10L).until(ExpectedConditions.visibilityOf(flashError));
+        Assertions.assertTrue(flashError.getText().startsWith("Your username is invalid!"));
+        usernameField = webDriver.findElement(By.id("username"));
+        passwordField = webDriver.findElement(By.id("password"));
+        submit = webDriver.findElement(By.cssSelector("button[type='submit']"));
+
+        usernameField.sendKeys("tomsmith");
+        passwordField.sendKeys("SuperSecretPassword!");
+        submit.click();
+
+        WebElement flashSuccess = webDriver.findElement(By.cssSelector("div[class='flash success']"));
+        new WebDriverWait(webDriver, 10L).until(ExpectedConditions.visibilityOf(flashSuccess));
+        Assertions.assertTrue(flashSuccess.getText().startsWith("You logged into a secure area!"));
+    }
+
+    @Test
+    public void nestedFramesTest()
+    {
+        gotoMainPage();
+        mainPage.gotoPage("nested_frames");
+        List<WebElement> frames = webDriver.findElements(By.tagName("frame"));
+
+        for (int i = 0; i < frames.size(); ++i)
+        {
+            WebElement frame = frames.get(i);
+            new WebDriverWait(webDriver, 10L).until(ExpectedConditions.visibilityOf(frame));
+            webDriver.switchTo().frame(frame);
+            String expectedText = null;
+
+            switch (i)
+            {
+                case 0:
+                    expectedText = "LEFT";
+                    break;
+                case 1:
+                    expectedText = "MIDDLE";
+                    break;
+                case 2:
+                    expectedText = "RIGHT";
+                    break;
+                case 3:
+                    expectedText = "BOTTOM";
+                    break;
+                default:
+                    Assertions.fail("too many frames");
+                    break;
+            }
+
+            String text = frame.findElement(By.tagName("body")).getText();
+            Logger.getLogger(getClass().getName()).info("" + i + ": " + text);
+            //Assertions.assertEquals(expectedText, frame.getText());
+            Assertions.assertTrue(text.contains(expectedText));
+        }
+    }
+
+    @Test
+    public void geolocationTest()
+    {
+        gotoMainPage();
+        mainPage.gotoPage("geolocation");
+        WebElement button = webDriver.findElement(By.tagName("button"));
+        button.click();
+        new WebDriverWait(webDriver, 60L).until(ExpectedConditions.elementToBeClickable(By.id("lat-value")));
+        WebElement latitude = webDriver.findElement(By.id("lat-value"));
+        WebElement longitude = webDriver.findElement(By.id("long-value"));
+        Assertions.assertTrue(NumberChecker.isDouble(latitude.getText()).isPresent());
+        Assertions.assertTrue(NumberChecker.isDouble(longitude.getText()).isPresent());
     }
 
     @AfterEach
