@@ -17,6 +17,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 public class TheInternetTests
@@ -271,6 +272,20 @@ public class TheInternetTests
         WebElement longitude = webDriver.findElement(By.id("long-value"));
         Assertions.assertTrue(NumberChecker.isDouble(latitude.getText()).isPresent());
         Assertions.assertTrue(NumberChecker.isDouble(longitude.getText()).isPresent());
+    }
+
+    @Test
+    public void horizontalSliderTest()
+    {
+        gotoMainPage();
+        mainPage.gotoPage("horizontal_slider");
+        WebElement slider = webDriver.findElement(By.cssSelector("input[type='range']"));
+        Actions action = new Actions(webDriver);
+        action.clickAndHold(slider).moveByOffset(10, 0).release().build().perform();
+        String text = webDriver.findElement(By.cssSelector("span[id='range']")).getText();
+        Optional<Double> value = NumberChecker.isDouble(text);
+        Assertions.assertTrue(value.isPresent());
+        Assertions.assertEquals(3, value.get());
     }
 
     @AfterEach
