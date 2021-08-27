@@ -288,6 +288,22 @@ public class TheInternetTests
         Assertions.assertEquals(3, value.get());
     }
 
+    @Test
+    public void hoverTest()
+    {
+        gotoMainPage();
+        mainPage.gotoPage("hovers");
+        List<WebElement> figures = webDriver.findElements(By.className("figure"));
+
+        for (WebElement figure : figures)
+        {
+            WebElement img = figure.findElement(By.tagName("img"));
+            new Actions(webDriver).moveToElement(img).build().perform();
+            WebElement caption = figure.findElement(By.className("figcaption"));
+            new WebDriverWait(webDriver, 2L).until(ExpectedConditions.visibilityOf(caption));
+        }
+    }
+
     @AfterEach
     public void testCleanup()
     {
